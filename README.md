@@ -1,8 +1,8 @@
-# Project 2 - *Name of App Here*
+# Project 2 - *Week2 Assignment*
 
-**Name of your app** is an android app that allows a user to search for articles on web using simple filters. The app utilizes [New York Times Search API](http://developer.nytimes.com/docs/read/article_search_api_v2).
+**New York Times Search API** is an android app that allows a user to search for articles on web using simple filters. The app utilizes [New York Times Search API](http://developer.nytimes.com/docs/read/article_search_api_v2).
 
-Time spent: **X** hours spent in total
+Time spent: **12** hours spent in total
 
 ## User Stories
 
@@ -54,6 +54,10 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 ## Notes
 
 Describe any challenges encountered while building the app.
+
+1. Where is the better plance to implement AsyncTask which include OkHttpClient network operations? I was using option 2 in last assignment; however I found the doInBackground operations in my Ansy task will be reused in in different activity. This time I try the option 1; after that, I realized that when I try to reapint (or notify) UI changes it introduced a piece of coupling code related to my Activity. That make me feel option 2 is not a right way to do. Anyone have some suggestion on how to better use of Async task? Thank you so much.
+  (option 1) To create a client (e.g. NYTClient) and then crate a static inner class to extends AsyncTask? 
+  (option 2) To create a static inner class to extends AsyncTask at the Activity class.
 
 ## Open-source libraries used
 
