@@ -75,8 +75,7 @@ public class FilterDialogueFragment extends DialogFragment{
         checkbox_sports = (CheckBox) view.findViewById(R.id.checkbox_sports);
 
         if(uiFilter==null){
-            //default setting
-            uiFilter = new UIFilter();
+            //Default Setting
             initUIFilter();
 
             //populate
@@ -86,6 +85,7 @@ public class FilterDialogueFragment extends DialogFragment{
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                uiFilter.setActivated(true);
                 uiFilter.setBeginDate(mEditText.getText().toString());
                 uiFilter.setSort(spinner.getSelectedItem().toString());
                 // Check if the checkbox is checked
@@ -112,27 +112,19 @@ public class FilterDialogueFragment extends DialogFragment{
             }
         });
 
-
-//        // Fetch arguments from bundle and set title
-//        if(getArguments() != null)
-//        {
-//            uiFilter = (UIFilter) getArguments().getSerializable("settings");
-//            if(uiFilter != null) {
-//                populateLayoutValues(uiFilter);
-//            }
-//        }
-
         // Show soft keyboard automatically and request focus to field
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
 
     private void initUIFilter(){
+        uiFilter = new UIFilter();
         uiFilter.setBeginDate(getCurrentDate());
         uiFilter.setSort(getDefaultSort());
         uiFilter.setCheck_Arts(true);
         uiFilter.setCheck_Fashion(false);
         uiFilter.setCheck_Fashion(false);
+        uiFilter.setActivated(false);
     }
 
     private void populateLayoutValues(){

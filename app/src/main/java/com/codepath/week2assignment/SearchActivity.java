@@ -234,90 +234,119 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
 
         client.newCall(request).enqueue(new Callback() {
 
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.d(this.getClass().getName(),e.getMessage());
-                // Run view-related code back on the main thread
-                SearchActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(SearchActivity.this, "Network is Disconnected", Toast.LENGTH_LONG).show();
-                    }
-
-                });
-            }
-
-            @Override
-            public void onResponse(Call call, final Response response) throws IOException {
-                // ... check for failure using `isSuccessful` before proceeding
-                Log.d(this.getClass().getName(),"onResponse");
-                final ArrayList<NYTArticle> localNYTArticles;
-
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
-                }
-
-                // Read data on the worker thread
-                final String jsonData = response.body().string();
-
-                try {
-                    JSONObject jsonObject = new JSONObject(jsonData);
-                    JSONObject responseObject = jsonObject.getJSONObject("response");
-                    JSONObject metaObject = responseObject.getJSONObject("meta");
-                    Meta meta = new Meta(metaObject);
-                    String status = jsonObject.getString("status");
-                    JSONArray docsArray = responseObject.getJSONArray("docs");
-                    localNYTArticles= NYTArticle.fromJSONArray(docsArray);
-                    Log.d(this.getClass().getName(),"meta.getHits()="+meta.getHits());
-                    Log.d(this.getClass().getName(),"meta.getOffset()="+meta.getOffset());
-                    Log.d(this.getClass().getName(),"meta.getTime()="+meta.getTime());
-                    Log.d(this.getClass().getName(),"Status="+jsonObject.getString("status"));
-                    Log.d(this.getClass().getName(),"localNYTArticles.size()="+localNYTArticles.size());
-
-                } catch (JSONException e) {
-                    Log.d(this.getClass().getName(),"Unexpected JSON response need to be investigated.");
-                    e.printStackTrace();
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.d(this.getClass().getName(), e.getMessage());
                     // Run view-related code back on the main thread
                     SearchActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(SearchActivity.this, "Something wrong.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(SearchActivity.this, "Network is Disconnected", Toast.LENGTH_LONG).show();
                         }
+
                     });
-                    return;
                 }
 
-                // Run view-related code back on the main thread
-                SearchActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(localNYTArticles == null) {
-                            Toast.makeText(SearchActivity.this,"No Result Found.", Toast.LENGTH_LONG).show();
-                        } else if (localNYTArticles.size()==0 ) {
-                            Toast.makeText(SearchActivity.this,"Found Nothing ! Try other words. ", Toast.LENGTH_LONG).show();
-                        } else {
-                            nytArticleArrayAdapter.addAll(localNYTArticles);
-                        }
+                @Override
+                public void onResponse(Call call, final Response response) throws IOException {
+                    // ... check for failure using `isSuccessful` before proceeding
+                    Log.d(this.getClass().getName(), "onResponse");
+                    final ArrayList<NYTArticle> localNYTArticles;
 
+                    if (!response.isSuccessful()) {
+                        SearchActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                isOnlineAndToast();
+                            }
+
+                        });
+                        throw new IOException("Unexpected code " + response);
                     }
-                });
-            }
-        });
+
+                    // Read data on the worker thread
+                    final String jsonData = response.body().string();
+
+                    try {
+                        JSONObject jsonObject = new JSONObject(jsonData);
+                        JSONObject responseObject = jsonObject.getJSONObject("response");
+                        JSONObject metaObject = responseObject.getJSONObject("meta");
+                        Meta meta = new Meta(metaObject);
+                        String status = jsonObject.getString("status");
+                        JSONArray docsArray = responseObject.getJSONArray("docs");
+                        localNYTArticles = NYTArticle.fromJSONArray(docsArray);
+                        Log.d(this.getClass().getName(), "meta.getHits()=" + meta.getHits());
+                        Log.d(this.getClass().getName(), "meta.getOffset()=" + meta.getOffset());
+                        Log.d(this.getClass().getName(), "meta.getTime()=" + meta.getTime());
+                        Log.d(this.getClass().getName(), "Status=" + jsonObject.getString("status"));
+                        Log.d(this.getClass().getName(), "localNYTArticles.size()=" + localNYTArticles.size());
+
+                    } catch (JSONException e) {
+                        Log.d(this.getClass().getName(), "Unexpected JSON response need to be investigated.");
+                        e.printStackTrace();
+                        // Run view-related code back on the main thread
+                        SearchActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(SearchActivity.this, "Something wrong.", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        return;
+                    }
+
+                    // Run view-related code back on the main thread
+                    SearchActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (localNYTArticles == null) {
+                                Toast.makeText(SearchActivity.this, "No Result Found.", Toast.LENGTH_LONG).show();
+                            } else if (localNYTArticles.size() == 0) {
+                                Toast.makeText(SearchActivity.this, "Found Nothing ! Try other words. ", Toast.LENGTH_LONG).show();
+                            } else {
+                                nytArticleArrayAdapter.addAll(localNYTArticles);
+                            }
+
+                        }
+                    });
+                }
+            });
+
     }
 
     @Override
     public void onFinishSettingDialog(UIFilter uiFilter) {
 
         this.uiFilter = uiFilter;
-        if(this.uiFilter==null){
-            Toast.makeText(SearchActivity.this,"Advanced Search Setting Cleared!.", Toast.LENGTH_LONG).show();
-        } else {
+        if(this.uiFilter==null && this.uiFilter.isActivated()){
             Toast.makeText(SearchActivity.this,"Advanced Search Setting Saved.", Toast.LENGTH_LONG).show();
             Log.d(this.getClass().getName(), "String.valueOf(svSearchView.getQuery())=" + String.valueOf(svSearchView.getQuery()));
             Log.d(this.getClass().getName(), "uiFilter.getBeginDate()=" + uiFilter.getBeginDate());
             Log.d(this.getClass().getName(), "uiFilter.getSort()=" + uiFilter.getSort());
+        } else {
+            Toast.makeText(SearchActivity.this,"Advanced Search Setting Cleared!.", Toast.LENGTH_LONG).show();
         }
+    }
 
+    private boolean isOnlineAndToast(){
+        Toast.makeText(SearchActivity.this,"Testing Network Connectivity...", Toast.LENGTH_SHORT).show();
+        if(isOnline()){
+            Toast.makeText(SearchActivity.this,"Internet is available, enjoy! ", Toast.LENGTH_LONG).show();
+            return true;
+        }else{
+            Toast.makeText(SearchActivity.this,"Internet is not available, please check your connection!", Toast.LENGTH_LONG).show();
+            return false;
+        }
+    }
+
+    private boolean isOnline() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+            int     exitValue = ipProcess.waitFor();
+            return (exitValue == 0);
+        } catch (IOException e)          { e.printStackTrace(); }
+        catch (InterruptedException e) { e.printStackTrace(); }
+        return false;
     }
 
 }

@@ -13,6 +13,7 @@ public class UIFilter {
     public boolean Check_Arts;
     public boolean Check_Fashion;
     public boolean Check_Sports;
+    public boolean isActivated;
 
     public UIFilter() {}
 
@@ -61,5 +62,13 @@ public class UIFilter {
         newsType += isCheck_Fashion() ? " \"Fashion\"" : "";
         newsType += isCheck_Sports() ? " \"Sports\"" : "";
         return newsType.equals("")?null:"("+newsType+")";
+    }
+
+    public boolean isActivated() {
+        return isActivated;
+    }
+
+    public void setActivated(boolean activated) {
+        isActivated = activated;
     }
 }
