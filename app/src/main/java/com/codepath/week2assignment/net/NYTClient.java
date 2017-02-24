@@ -20,6 +20,8 @@ public class NYTClient {
     public static final String API_BASE_URL = "https://api.nytimes.com/svc/";
     public static final String API_SEARCH_BASE_PATH= "search/" ;
     public static final String API_SEARCH_SUFFIX_PATH= "articlesearch.json" ;
+    public static final String PARA_PAGE = "page";
+    public static final String PARA_Q = "q";
     public static final String PARA_BEGIN_DATE = "begin_date";
     public static final String PARA_END_DATE = "end_date";
     public static final String PARA_SORT = "sort";
@@ -41,12 +43,18 @@ public class NYTClient {
 
     public Request requestBuilderByUIFilter(int page, String query, UIFilter filter){
         HttpUrl.Builder httpUrlBuilder = new Request.Builder().url(getSearchApiUrl()).build().url().newBuilder();
-
-        if(filter.getBeginDate() != null)  httpUrlBuilder.addQueryParameter(PARA_BEGIN_DATE, filter.getBeginDate() );
-        if(filter.getSort() != null)  httpUrlBuilder.addQueryParameter(PARA_SORT, filter.getSort() );
-        if(filter.genNewsDesk() != null)  httpUrlBuilder.addQueryParameter(PARA_FQ, PARA_NEWS_DESK+ filter.genNewsDesk() );
+        httpUrlBuilder.addQueryParameter(PARA_PAGE, String.valueOf(page));
+        httpUrlBuilder.addQueryParameter(PARA_Q, query);
+        if(filter!=null && filter.isActivated() && filter.getBeginDate() != null)  httpUrlBuilder.addQueryParameter(PARA_BEGIN_DATE, filter.getBeginDate() );
+        if(filter!=null && filter.isActivated() && filter.getSort() != null)  httpUrlBuilder.addQueryParameter(PARA_SORT, filter.getSort() );
+        if(filter!=null && filter.isActivated() && filter.genNewsDesk() != null)  httpUrlBuilder.addQueryParameter(PARA_FQ, PARA_NEWS_DESK+ filter.genNewsDesk() );
         Request request = new Request.Builder().url(httpUrlBuilder.build()).build();
         return request;
+    }
+
+    public Request requestBuilderByUIFilter(int page, String query){
+        //pass null as argument when performing default search
+        return requestBuilderByUIFilter(page,query,null);
     }
 
     private String getSearchApiUrl() {

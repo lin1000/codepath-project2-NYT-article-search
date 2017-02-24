@@ -15,8 +15,8 @@ The following **required** functionality is completed:
   * [x] News desk values (Arts, Fashion & Style, Sports)
   * [x] Sort order (oldest or newest)
 * [x] Subsequent searches have any filters applied to the search results
-* [ ] User can tap on any article in results to view the contents in an embedded browser.
-* [ ] User can **scroll down to see more articles**. The maximum number of articles is limited by the API search.
+* [x] User can tap on any article in results to view the contents in an embedded browser.
+* [x] User can **scroll down to see more articles**. The maximum number of articles is limited by the API search.
 
 The following **optional** features are implemented:
 

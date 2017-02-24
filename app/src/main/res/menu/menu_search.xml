@@ -16,6 +16,12 @@
         android:icon="@drawable/ic_sort_black"
         app:showAsAction="ifRoom|collapseActionView" />
 
+    <item android:id="@+id/menu_item_share"
+        android:orderInCategory="5"
+        app:showAsAction="ifRoom"
+        android:title="Share"
+        android:actionProviderClass="android.widget.ShareActionProvider" />
+
 
 
 </menu>

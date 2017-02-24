@@ -1,5 +1,6 @@
 package com.codepath.week2assignment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
@@ -9,6 +10,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.Toast;
@@ -21,7 +24,7 @@ import com.codepath.week2assignment.model.Meta;
 import com.codepath.week2assignment.model.NYTArticle;
 import com.codepath.week2assignment.model.UIFilter;
 import com.codepath.week2assignment.net.NYTClient;
-import com.codepath.week2assignment.net.OkHttpClientFactory;
+import com.codepath.week2assignment.uilistener.EndlessScrollListener;
 import com.facebook.stetho.Stetho;
 
 import org.json.JSONArray;
@@ -35,21 +38,27 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class SearchActivity extends AppCompatActivity implements FilterDialogueFragmentCallBackInterface {
 
+    public enum UIAction {
+        RELOAD, ADD
+    }
+
+
     @BindView(R.id.gvResults) GridView gvResults;
     @BindView(R.id.toolbar) Toolbar tlToolbar;
-    SearchView svSearchView;
 
+    SearchView svSearchView;
     ArrayList<NYTArticle> nytArticles;
     ArrayAdapter<NYTArticle> nytArticleArrayAdapter;
-    //lazy initialization
+
+    //lazy loading
     UIFilter uiFilter;
     FilterDialogueFragment filterDialogueFragment;
+    String currentQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +81,33 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
         nytArticles = new ArrayList<>();
         nytArticleArrayAdapter = new ArticleArrayAdapter(this, nytArticles);
         gvResults.setAdapter(nytArticleArrayAdapter);
+        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //create an intent to display the aricle
+                Intent intent = new Intent(SearchActivity.this, ArticleWebViewActivity.class);
+                //get the article to display
+                String url = nytArticles.get(position).getWebUrl();
+                //pass in that article into intent
+                intent.putExtra("url",url);
+                //launch the activity
+                startActivity(intent);
+            }
+        });
+        // Attach the listener to the AdapterView onCreate
+        gvResults.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to your AdapterView
+                Log.d(this.getClass().getName(),"page="+page);
+                Log.d(this.getClass().getName(),"totalItemsCount="+totalItemsCount);
+                searchArticle(page,currentQuery,uiFilter,UIAction.ADD);
+                // or loadNextDataFromApi(totalItemsCount);
+                return true; // ONLY if more data is actually being loaded; false otherwise.
+            }
+        });
+
         uiFilter = new UIFilter();
     }
 
@@ -91,8 +127,9 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
                 // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
                 Log.d(this.getClass().getName(),"query:"+ query);
-                Toast.makeText(SearchActivity.this,"Searching for " + query, Toast.LENGTH_LONG).show();
-                searchArticle(0, query);
+                currentQuery = query;
+                Toast.makeText(SearchActivity.this,"Searching for " + query + (uiFilter.isActivated()?" (Advanced Search)":""), Toast.LENGTH_LONG).show();
+                searchArticle(0, query, uiFilter,UIAction.RELOAD);
                 return true;
             }
 
@@ -137,22 +174,13 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
         return gvResults;
     }
 
-    public void searchArticle(int page, String query){
-        if (uiFilter == null){
-            searchArticleBasic(page, query);
-        }else{
-            searchArticleAdvanced(page,query,uiFilter);
-        }
-    }
-
-    public void searchArticleAdvanced(int page, String query,UIFilter filter){
+    public void searchArticle(int page, String query, UIFilter filter, final UIAction uiAction) {
         NYTClient nytClient = new NYTClient(this);
-        Request request = nytClient.requestBuilderByUIFilter(page, query,filter);
+        Request request = nytClient.requestBuilderByUIFilter(page, query, filter);
         nytClient.getClient().newCall(request).enqueue(new Callback() {
-
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.d(this.getClass().getName(),e.getMessage());
+                Log.d(this.getClass().getName(), e.getMessage());
                 // Run view-related code back on the main thread
                 SearchActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -166,7 +194,7 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 // ... check for failure using `isSuccessful` before proceeding
-                Log.d(this.getClass().getName(),"onResponse");
+                Log.d(this.getClass().getName(), "onResponse");
                 final ArrayList<NYTArticle> localNYTArticles;
 
                 if (!response.isSuccessful()) {
@@ -183,15 +211,15 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
                     Meta meta = new Meta(metaObject);
                     String status = jsonObject.getString("status");
                     JSONArray docsArray = responseObject.getJSONArray("docs");
-                    localNYTArticles= NYTArticle.fromJSONArray(docsArray);
-                    Log.d(this.getClass().getName(),"meta.getHits()="+meta.getHits());
-                    Log.d(this.getClass().getName(),"meta.getOffset()="+meta.getOffset());
-                    Log.d(this.getClass().getName(),"meta.getTime()="+meta.getTime());
-                    Log.d(this.getClass().getName(),"Status="+jsonObject.getString("status"));
-                    Log.d(this.getClass().getName(),"localNYTArticles.size()="+localNYTArticles.size());
+                    localNYTArticles = NYTArticle.fromJSONArray(docsArray);
+                    Log.d(this.getClass().getName(), "meta.getHits()=" + meta.getHits());
+                    Log.d(this.getClass().getName(), "meta.getOffset()=" + meta.getOffset());
+                    Log.d(this.getClass().getName(), "meta.getTime()=" + meta.getTime());
+                    Log.d(this.getClass().getName(), "Status=" + jsonObject.getString("status"));
+                    Log.d(this.getClass().getName(), "localNYTArticles.size()=" + localNYTArticles.size());
 
                 } catch (JSONException e) {
-                    Log.d(this.getClass().getName(),"Unexpected JSON response need to be investigated.");
+                    Log.d(this.getClass().getName(), "Unexpected JSON response need to be investigated.");
                     e.printStackTrace();
                     // Run view-related code back on the main thread
                     SearchActivity.this.runOnUiThread(new Runnable() {
@@ -207,12 +235,24 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
                 SearchActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(localNYTArticles == null) {
-                            Toast.makeText(SearchActivity.this,"No Result Found.", Toast.LENGTH_LONG).show();
-                        } else if (localNYTArticles.size()==0 ) {
-                            Toast.makeText(SearchActivity.this,"Found Nothing ! Try other words. ", Toast.LENGTH_LONG).show();
+                        if (localNYTArticles == null) {
+                            Toast.makeText(SearchActivity.this, "No Result Found.", Toast.LENGTH_LONG).show();
+                        } else if (localNYTArticles.size() == 0) {
+                            Toast.makeText(SearchActivity.this, "Nothing Found ! Try other words. ", Toast.LENGTH_LONG).show();
                         } else {
-                            nytArticleArrayAdapter.addAll(localNYTArticles);
+                            switch(uiAction){
+                                case RELOAD:
+                                    nytArticleArrayAdapter.clear();
+                                    nytArticleArrayAdapter.addAll(localNYTArticles);
+                                    break;
+                                case ADD:
+                                    nytArticleArrayAdapter.addAll(localNYTArticles);
+                                    break;
+                                default:
+                                    Toast.makeText(SearchActivity.this, "Opps", Toast.LENGTH_SHORT).show();
+                                break;
+                            }
+
                         }
 
                     }
@@ -220,104 +260,13 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
             }
         });
 
-
-    }
-
-    public void searchArticleBasic(int page, String query){
-
-        NYTClient nytClient = new NYTClient(this);
-        OkHttpClient client  = OkHttpClientFactory.getInstance(this).getClient();
-
-        Request request = new Request.Builder()
-                .url(nytClient.getSearchApiUrl(page,query))
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.d(this.getClass().getName(), e.getMessage());
-                    // Run view-related code back on the main thread
-                    SearchActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(SearchActivity.this, "Network is Disconnected", Toast.LENGTH_LONG).show();
-                        }
-
-                    });
-                }
-
-                @Override
-                public void onResponse(Call call, final Response response) throws IOException {
-                    // ... check for failure using `isSuccessful` before proceeding
-                    Log.d(this.getClass().getName(), "onResponse");
-                    final ArrayList<NYTArticle> localNYTArticles;
-
-                    if (!response.isSuccessful()) {
-                        SearchActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                isOnlineAndToast();
-                            }
-
-                        });
-                        throw new IOException("Unexpected code " + response);
-                    }
-
-                    // Read data on the worker thread
-                    final String jsonData = response.body().string();
-
-                    try {
-                        JSONObject jsonObject = new JSONObject(jsonData);
-                        JSONObject responseObject = jsonObject.getJSONObject("response");
-                        JSONObject metaObject = responseObject.getJSONObject("meta");
-                        Meta meta = new Meta(metaObject);
-                        String status = jsonObject.getString("status");
-                        JSONArray docsArray = responseObject.getJSONArray("docs");
-                        localNYTArticles = NYTArticle.fromJSONArray(docsArray);
-                        Log.d(this.getClass().getName(), "meta.getHits()=" + meta.getHits());
-                        Log.d(this.getClass().getName(), "meta.getOffset()=" + meta.getOffset());
-                        Log.d(this.getClass().getName(), "meta.getTime()=" + meta.getTime());
-                        Log.d(this.getClass().getName(), "Status=" + jsonObject.getString("status"));
-                        Log.d(this.getClass().getName(), "localNYTArticles.size()=" + localNYTArticles.size());
-
-                    } catch (JSONException e) {
-                        Log.d(this.getClass().getName(), "Unexpected JSON response need to be investigated.");
-                        e.printStackTrace();
-                        // Run view-related code back on the main thread
-                        SearchActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(SearchActivity.this, "Something wrong.", Toast.LENGTH_LONG).show();
-                            }
-                        });
-                        return;
-                    }
-
-                    // Run view-related code back on the main thread
-                    SearchActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (localNYTArticles == null) {
-                                Toast.makeText(SearchActivity.this, "No Result Found.", Toast.LENGTH_LONG).show();
-                            } else if (localNYTArticles.size() == 0) {
-                                Toast.makeText(SearchActivity.this, "Found Nothing ! Try other words. ", Toast.LENGTH_LONG).show();
-                            } else {
-                                nytArticleArrayAdapter.addAll(localNYTArticles);
-                            }
-
-                        }
-                    });
-                }
-            });
-
     }
 
     @Override
     public void onFinishSettingDialog(UIFilter uiFilter) {
 
         this.uiFilter = uiFilter;
-        if(this.uiFilter==null && this.uiFilter.isActivated()){
+        if(this.uiFilter!=null && this.uiFilter.isActivated()){
             Toast.makeText(SearchActivity.this,"Advanced Search Setting Saved.", Toast.LENGTH_LONG).show();
             Log.d(this.getClass().getName(), "String.valueOf(svSearchView.getQuery())=" + String.valueOf(svSearchView.getQuery()));
             Log.d(this.getClass().getName(), "uiFilter.getBeginDate()=" + uiFilter.getBeginDate());
