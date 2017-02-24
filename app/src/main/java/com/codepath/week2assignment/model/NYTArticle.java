@@ -43,18 +43,6 @@ public class NYTArticle {
 
     }
 
-    public static ArrayList<NYTArticle> fromJSONArray(JSONArray array){
-        ArrayList<NYTArticle> results = new ArrayList<>();
-        for (int x=0 ; x < array.length(); x++){
-            try {
-                results.add(new NYTArticle(array.getJSONObject(x)));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return results;
-    }
-
     public String getWebUrl() {
         return webUrl;
     }
@@ -86,4 +74,18 @@ public class NYTArticle {
     public String getHeadLine() {
         return headLine;
     }
+
+
+    public static ArrayList<NYTArticle> fromJSONArray(JSONArray array){
+        ArrayList<NYTArticle> results = new ArrayList<>();
+        for (int x=0 ; x < array.length(); x++){
+            try {
+                results.add(new NYTArticle(array.getJSONObject(x)));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return results;
+    }
+
 }

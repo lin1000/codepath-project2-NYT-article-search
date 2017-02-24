@@ -1,5 +1,6 @@
 package com.codepath.week2assignment.fragments;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
 
@@ -25,7 +27,7 @@ import java.util.Date;
  * Created by lin1000 on 2017/2/24.
  */
 
-public class FilterDialogueFragment extends DialogFragment{
+public class FilterDialogueFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener{
 
     private EditText mEditText;
     private Spinner spinner;
@@ -64,7 +66,10 @@ public class FilterDialogueFragment extends DialogFragment{
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        getDialog().setTitle(getResources().getString(R.string.advanced_search));
+
+        //getDialog().getWindow().setGravity(Gravity.CENTER_HORIZONTAL);
+        //getDialog().setTitle(getResources().getString(R.string.advanced_search));
+
         // Get field from view
         mEditText = (EditText) view.findViewById(R.id.etBeginDate);
         spinner = (Spinner) view.findViewById(R.id.spSort);
@@ -77,10 +82,16 @@ public class FilterDialogueFragment extends DialogFragment{
         if(uiFilter==null){
             //Default Setting
             initUIFilter();
-
             //populate
             populateLayoutValues();
         }
+
+        mEditText.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                showDatePicker();
+            }
+        });
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,7 +141,7 @@ public class FilterDialogueFragment extends DialogFragment{
     private void populateLayoutValues(){
         //populate default setting
         mEditText.setText(uiFilter.getBeginDate().toString());
-        if (uiFilter.getSort().equals("oldest"))
+        if (uiFilter.getSort().equals(getResources().getString(R.string.sort_arry_oldest)))
             spinner.setSelection(0);
         else
             spinner.setSelection(1);
@@ -138,6 +149,11 @@ public class FilterDialogueFragment extends DialogFragment{
          checkbox_arts.setChecked(uiFilter.Check_Arts);
          checkbox_fashion.setChecked(uiFilter.Check_Fashion);
          checkbox_sports.setChecked(uiFilter.Check_Sports);
+    }
+
+    private void showDatePicker(){
+        DatePickerDialogueFragment datePickerDialogueFragment = new DatePickerDialogueFragment();
+        datePickerDialogueFragment.show(getChildFragmentManager(), "date Picker");
     }
 
     @Override
@@ -153,6 +169,18 @@ public class FilterDialogueFragment extends DialogFragment{
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString());
         }
+    }
+
+    @Override
+    public void onDateSet(DatePicker datePicker, int year, int monthOfYear, int dayOfMonth) {
+        // store the values selected into a Calendar instance
+        final Calendar c = Calendar.getInstance();
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, monthOfYear);
+        c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+        mEditText.setText(formatter.format(c.getTime()));
+
     }
 
 

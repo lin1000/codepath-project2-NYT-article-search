@@ -43,10 +43,7 @@ import okhttp3.Response;
 
 public class SearchActivity extends AppCompatActivity implements FilterDialogueFragmentCallBackInterface {
 
-    public enum UIAction {
-        RELOAD, ADD
-    }
-
+    public enum UIAction { RELOAD, ADD }
 
     @BindView(R.id.gvResults) GridView gvResults;
     @BindView(R.id.toolbar) Toolbar tlToolbar;
@@ -55,7 +52,6 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
     ArrayList<NYTArticle> nytArticles;
     ArrayAdapter<NYTArticle> nytArticleArrayAdapter;
 
-    //lazy loading
     UIFilter uiFilter;
     FilterDialogueFragment filterDialogueFragment;
     String currentQuery;
@@ -72,9 +68,6 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setLogo(R.drawable.ic_earth);
         getSupportActionBar().setDisplayUseLogoEnabled(true);
-
-        //Async task
-        //new LoadNYTActivity().execute("https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=20160112&sort=oldest&fq=news_desk:(%22Education%22%20%22Health%22)&api-key=193fa1402e104f3887dd022db531078f");
 
         //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
         //        .setAction("Action", null).show();
@@ -123,8 +116,6 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
             @Override
             public boolean onQueryTextSubmit(String query) {
                 // perform query here
-                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
-                // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
                 Log.d(this.getClass().getName(),"query:"+ query);
                 currentQuery = query;
@@ -199,6 +190,7 @@ public class SearchActivity extends AppCompatActivity implements FilterDialogueF
 
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
+
                 }
 
                 // Read data on the worker thread
