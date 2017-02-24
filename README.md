@@ -22,7 +22,7 @@ The following **optional** features are implemented:
 
 * [x] Implements robust error handling, [check if internet is available](http://guides.codepath.com/android/Sending-and-Managing-Network-Requests#checking-for-network-connectivity), handle error cases, network failures
 * [x] Used the **ActionBar SearchView** or custom layout as the query box instead of an EditText
-* [ ] User can **share an article link** to their friends or email it to themselves
+* [x] User can **share an article link** to their friends or email it to themselves
 * [x] Replaced Filter Settings Activity with a lightweight modal overlay
 * [x] Improved the user interface and experiment with image assets and/or styling and coloring
 
@@ -44,6 +44,7 @@ The following **additional** features are implemented:
 * [x] List anything else that you can get done to improve the app functionality!
  * Clear Advanced Search Option Setting
  * Use toast to notify user on Network Error, Advance Setting Saved, Advance Setting Cleard to make user experience smothly.
+ 
 
 ## Video Walkthrough
 
@@ -60,6 +61,8 @@ Describe any challenges encountered while building the app.
 1. Where is the better plance to implement AsyncTask which include OkHttpClient network operations? I was using option 2 in last assignment; however I found the doInBackground operations in my Ansy task will be reused in in different activity. This time I try the option 1; after that, I realized that when I try to reapint (or notify) UI changes it introduced a piece of coupling code related to my Activity. That make me feel option 2 is not a right way to do. Anyone have some suggestion on how to better use of Async task? Thank you so much.
   (option 1) To create a client (e.g. NYTClient) and then crate a static inner class to extends AsyncTask? 
   (option 2) To create a static inner class to extends AsyncTask at the Activity class.
+  
+ [Resolved] In the end , I leveraged the asynchronous OkHttpClient to keep the UI coupling call in the Activity class. In the mean time , I wrapped the complexity of OkHttpClient, Request Builder,HttpUrlBuilder, and New York Times API parameters in NYTClient to decouple (also increase reusability) the networking code with UI code.
 
 ## Open-source libraries used
 
