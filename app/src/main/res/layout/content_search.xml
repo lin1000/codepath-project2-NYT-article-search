@@ -13,8 +13,12 @@
     tools:context="com.codepath.week2assignment.SearchActivity"
     tools:showIn="@layout/activity_search">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+    <GridView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/btnSearch"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/gvResults"
+        android:numColumns="4" />
+
 </RelativeLayout>

@@ -1,4 +1,22 @@
 <resources>
-    <string name="app_name">Week2Assignment</string>
+    <string name="app_name">News Article Search</string>
     <string name="action_settings">Settings</string>
+    <string name="hint">Enter Search Query</string>
+    <string name="search">Search...</string>
+    <string name="my_api_key">193fa1402e104f3887dd022db531078f</string>
+    <string name="checkbox_arts">Arts</string>
+    <string name="checkbox_fashion">Fashion &amp; Style</string>
+    <string name="checkbox_sports">Sports</string>
+    <string name="begin_date">Begin Date</string>
+    <string name="sort_order">Sort Order</string>
+    <string name="new_desk_value">New Desk Value</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_clear">Clear</string>
+    <string name="sort_arry_oldest">oldest</string>
+    <string name="sort_arry_newest">newest</string>
+    <string-array name="sort_array">
+        <item>@string/sort_arry_oldest</item>
+        <item>@string/sort_arry_newest</item>
+    </string-array>
+    <string name="advanced_search">Advanced Search</string>
 </resources>
