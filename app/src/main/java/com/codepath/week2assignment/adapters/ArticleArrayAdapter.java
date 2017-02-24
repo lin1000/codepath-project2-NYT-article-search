@@ -46,7 +46,6 @@ public class ArticleArrayAdapter extends ArrayAdapter<NYTArticle> {
             Glide.with(getContext()).load(thumbnail).into(imageView);
         }
 
-
         return convertView;
     }
 }
